@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer
  *
- * Copyright (C) 2008-2016 by
+ * Copyright (C) 2008-2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -22,6 +22,7 @@
 /*
  * util/util.cmm : C-- が動くために必要な関数群
  *
+ * 2017.01.24 : 入出力方法をシリアル通信方式に変更、VGAへの出力関連の関数をすべて削除
  * 2017.01.21 : SIOがで定義されていればVGAとともにシリアル端末への出力も行えるように変更
  * 2016.12.24 : リングバッファ関連の関数等を追加
  * 2016.01.11 : panic() が #ifdef DEGUB 以外で printf() を使用しないように変更
@@ -52,20 +53,13 @@
  *
  */
 
-#define SIO
-
 #include <kernel.h>
+#include "../tty/kbdDisp.h"
 #include "util.h"
-#include "console.h"
-
-#ifdef SIO
-#include <sio.h>
-#endif
 
 // util の初期化ルーチン
 public void utilInit() {
   MEM = _ItoA(0);         // 0x0000 を指す char[] 参照（主記憶を意味する)
-  consInit();
 }
 
 // 32bit の大小比較(第1引数の方が大きいとき1、等しいとき0、小さいとき-1)
@@ -109,27 +103,6 @@ public char[] strCpy(char[] dst, char[] src) {
 
 // -------------------------------- 入出力ルーチン --------------------------
 
-// 1文字出力
-public void putCh(char c) {			    // VGA と SIO の両方へ出力
-
-#ifdef SIO
-  if(c=='\n'){
-    putSIO(ord('\r'));
-    putSIO(ord('\n'));
-  }else{
-    putSIO(ord(c));
-  }
-#endif
-
-  putVGA(c);
-}
-
-// 文字列出力
-public void putStr(char[] str) {
-  for (int i=0; str[i]!='\0'; i=i+1)
-    putCh(str[i]);
-}
-
 #ifdef DEBUG
 char[] __hstr = "0123456789abcdef";
 int  __putnum_w;
@@ -140,16 +113,16 @@ boolean __putnum_m;
 void __putnum_sub(int x, int n) {
   if (x!=0) {
     __putnum_sub(x/__putnum_b, n+1);
-    putCh(__hstr[x%__putnum_b]);
+    putTty(__hstr[x%__putnum_b]);
   } else {
-    if (__putnum_m&&__putnum_p!=' ') putCh('-');
+    if (__putnum_m&&__putnum_p!=' ') putTty('-');
     if (n==0) __putnum_w = __putnum_w - 1;
     while (__putnum_w>n) {
-      putCh(__putnum_p);
+      putTty(__putnum_p);
       __putnum_w = __putnum_w - 1;
     }
-    if (__putnum_m&&__putnum_p==' ') putCh('-');
-    if (n==0) putCh('0');
+    if (__putnum_m&&__putnum_p==' ') putTty('-');
+    if (n==0) putTty('0');
   }
 }
 
@@ -209,18 +182,18 @@ public int printF(char[] fmt, ...) {
         __uputnum(arg,w,p,16);
 	arg = args[n=n+1];
       } else if (c=='c') {
-        putCh(chr(arg));
+        putTty(chr(arg));
 	arg = args[n=n+1];
       } else if (c=='s') {
-        putStr(_ItoA(arg));
+        putStrTty(_ItoA(arg));
 	arg = args[n=n+1];
       } else if (c=='%') {
-        putCh('%');
+        putTty('%');
       } else {
-        putCh(c);
+        putTty(c);
       }
     } else
-      putCh(c);
+      putTty(c);
   }
   return n;
 }
@@ -279,9 +252,9 @@ public void panic(char[] msg, ...) {
   printF(msg, args[0], args[1], args[2]);
 
 #else
-  putStr(msg);
+  putStrTty(msg);
 #endif
 
-  putCh('\n');
+  putTty('\n');
   while (true) halt();				    // システムを停止する
 }

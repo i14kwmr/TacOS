@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer.
  *
- * Copyright (C) 2016 - 2017 by
+ * Copyright (C) 2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -20,11 +20,9 @@
  */
 
 /*
- * sio/serial.cmm : シリアルドライバ
+ * tty/kbdDisp.cmm : キーボードディスプレイドライバ
  *
- * 2017.01.26 : 割り込みベクタ番号を変更
- * 2017.01.21 : シリアル出力時の送信チェック忘れを修正
- * 2016.11.03 : 新規作成
+ * 2017.01.25 : 新規作成
  *
  * $Id$
  *
@@ -32,42 +30,46 @@
 
 #include <util.h>
 #include <kernel.h>
-#include "serial.h"
+#include "kbdDisp.h"
 
-#define SIO_Data 0x0c
-#define SIO_Ctrl 0x0e
+#define TTY_Data 0x08
+#define TTY_Ctrl 0x0a
 
 RingBuf rcvBuf = { null, 0, 0 };          // リングバッファインスタンス
 RingBuf trsBuf = { null, 0, 0 };
 
 /*
- *  SIO ハードウエア制御
+ *  入出力制御
  */
 
 // 送信関係
 boolean trsIdle;                          // トランスミッタがアイドル状態
 
-// SIO 送信割込み処理ルーチン
-interrupt sioTrs() {
+// ディスプレイ 表示割込み処理ルーチン
+interrupt ttyTrs() {
   if (ISEmpty(trsBuf)) {                  // 送信すべきデータがないなら
-    out(SIO_Ctrl,0x0040);                 // 送信割込み禁止
+    out(TTY_Ctrl,0x0040);                 // 送信割込み禁止
     trsIdle = true;
   } else {                                // そうでなければ
     int c = ord(getBuf(trsBuf));          // 送信バッファから一文字取り出す
-    while ((in(SIO_Ctrl) & 0x80)==0)
+    while ((in(TTY_Ctrl) & 0x80)==0)
       ;
-    out(SIO_Data,c);                      // データを送信
+    out(TTY_Data,c);                      // データを送信
   }
 }
 
-// SIO へ１文字出力
-void putSio(char c) {
+// ディスプレイ へ１文字出力
+public void putTty(char c) {
   setPri(KERN|DI);                        // 割込み禁止状態で
   if (trsIdle) {                          // 送信中でなければ
-    out(SIO_Ctrl,0x00c0);                 // 割込みを許可し
-    while ((in(SIO_Ctrl) & 0x80)==0)
+    if(c=='\n'){
+      putBuf(trsBuf, c);                  // 送信バッファに１文字追加
+      c='\r';
+    }
+    out(TTY_Ctrl,0x00c0);                 // 割込みを許可し
+    while ((in(TTY_Ctrl) & 0x80)==0)
       ;
-    out(SIO_Data,ord(c));                 // 送信を始める
+    out(TTY_Data,ord(c));                 // 送信を始める
     trsIdle = false;
   } else {
     putBuf(trsBuf, c);                    // 送信バッファに１文字追加
@@ -75,38 +77,50 @@ void putSio(char c) {
   setPri(KERN|EI);
 }
 
+// ディスプレイ へ文字列出力
+public void putStrTty(char[] str){
+  int len = strLen(str);
+  for(int i=0;i<len;i=i+1){
+    putTty(str[i]);
+  }
+}
 
 // 受信関係
+int  sem;  // キーコード を排他制御するセマフォ
 
-// SIO から入力された文字をバッファに格納する
+// キーボード から入力された文字をバッファに格納する
 void rcvData(char c) {
   putBuf(rcvBuf, c); // バッファへ転記
 }
 
-// SIO 受信割込み処理ルーチン
-interrupt sioRcv()  {
-  char c = chr(in(SIO_Data));  // 受信データを入力する
+// キーボード 受信割込み処理ルーチン
+interrupt ttyRcv()  {
+  char c = chr(in(TTY_Data));  // 受信データを入力する
   rcvData(c);
+  semV(sem);                   // プロセスを起こす
 }
 
 char[] _buf1 = array(BSIZE);
 char[] _buf2 = array(BSIZE);
-public void serialInit() {
+public void ttyInit() {
   int[] vect = _ItoA(0xffe0);
-  vect[6] = addrof(sioRcv);    // 割込みベクタ初期化
-  vect[7] = addrof(sioTrs);    // 割込みベクタ初期化
+  vect[4] = addrof(ttyRcv);    // 割込みベクタ初期化
+  vect[5] = addrof(ttyTrs);    // 割込みベクタ初期化
   rcvBuf.buf = _buf1;
   trsBuf.buf = _buf2;
-  in(SIO_Data);                // 受信バッファのゴミをとる
-  out(SIO_Ctrl,0x40);          // SIO受信割込み許可、送信割込み禁止
+  in(TTY_Data);                // 受信バッファのゴミをとる
+  out(TTY_Ctrl,0x40);          // tty 受信割込み許可、送信割込み禁止
   trsIdle = true;
-
 }
 
-public char getSerialCode() {
+// キーボード から１文字入力
+public char getKeyCode() {
+  semP(sem);  // キーボード待ちで止まる
+  char c = getBuf(rcvBuf);
+  return c;
+}
+
+// キーボード から１文字取得
+public char getTty(){
   return getBuf(rcvBuf);
-}
-
-public void putSerialCode(char c) {
-  putSio(c);
 }

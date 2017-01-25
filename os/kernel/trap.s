@@ -20,6 +20,7 @@
 ;
 ; kernel/trap.s : SVC ハンドラ(トラップ)
 ;
+; 2017.01.24 : システムコール名を変更（getPS2 -> getKey）
 ; 2017.01.11 : comTec システムコールを削除
 ; 2016.10.28 : comTec, putSIO, getSIO, getPS2 システムコールを追加
 ; 2016.01.11 : システムコール番号のエラーチェックを変更
@@ -62,7 +63,7 @@
 ;14     conWrite
 ;15     putSIO
 ;16     getSIO
-;17     getPS2
+;17     getKey
 ;18     malloc
 ;19     free
 
@@ -86,7 +87,7 @@
         dw      _conWrite   ; 14 conWrite
         dw      _putSIO     ; 15 putSIO
         dw      _getSIO     ; 16 getSIO
-        dw      _getPS2     ; 17 getPS2
+        dw      _getKey     ; 17 getKey
 ; MM の malloc(#18)と free(#19)は OS 内部専用システムコールなので SVC で扱わない
 
 ; ---------------------------- SVC ハンドラ(トラップ) -------------------------

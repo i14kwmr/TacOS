@@ -20,8 +20,9 @@
  */
 
 /*
- *　kernel/syscall.h : システムコールに関するデータを含むファイル
+ * kernel/syscall.h : システムコールに関するデータを含むファイル
  *
+ * 2017.01.24 : システムコール名を変更（GETPS2 -> GETKEY）
  * 2017.01.11 : COMTEC を削除
  * 2016.10.28 : COMTEC，PUTSIO，GETSIO，GETPS2 を追加
  * 2016.01.12 : E2BIG を削除
@@ -76,7 +77,7 @@
 #define CONWRITE        14
 #define PUTSIO          15
 #define GETSIO          16
-#define GETPS2          17
+#define GETKEY          17
 #define MALLOC          18
 #define FREE            19
 

@@ -38,13 +38,13 @@
 
 #include <tty.h>
 #include <pm.h>
-int[] sta = array(1);                           // ステータス格納領域の確保
+int[] sta = array(1);                              // ステータス格納領域の確保
 
 public void initMain() {
   while (true) {
-    int pid = exec("/bin/shell.exe", null);     // シェルプロセスを生成する
-    if (pid<0) conWrite("Shell doesn't start\n");// シェルが生成できなかった
-    while (wait(sta)!=pid)                      // 親のないプロセスの終了待ち
-      ;                                         // もしもシェルが終了したら
-  }                                             //   ループして再度起動
+    int pid = exec("/bin/shell.exe", null);        // シェルプロセスを生成する
+    if (pid<0) conWrite("Shell doesn't start\n");  // シェルが生成できなかった
+    while (wait(sta)!=pid)                         // 親のないプロセスの終了待ち
+      ;                                            // もしもシェルが終了したら
+  }                                                //   ループして再度起動
 }

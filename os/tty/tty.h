@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer.
  *
- * Copyright (C) 2011-2016 by
+ * Copyright (C) 2011-2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -22,6 +22,7 @@
 /*
  * tty/tty.h : tty.cmm の外部インタフェース
  *
+ * 2017.01.24 入出力方法をシリアル通信方式に変更、システムコール名を変更（getPS2 -> getKey）
  * 2015.06.04 新規作成
  *
  * $Id$
@@ -55,8 +56,8 @@ public int conRead(void[] buf, int len);
 public int conWrite(void[] buf);
 
 /*----------------------------------------------------------------------------
- *   名前   : getPS2
- *   戻り値 : 読み込んだ文字コード（カーソルキーコードも含む）
+ *   名前   : getKey
+ *   戻り値 : 読み込んだ文字コード
  *   解説   : キーボードが押されていればその文字コードを返す，そうでなければ'\0'を返す
  */
-public int getPS2();
+public int getKey();

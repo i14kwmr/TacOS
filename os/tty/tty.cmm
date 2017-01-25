@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer.
  *
- * Copyright (C) 2011-2016 by
+ * Copyright (C) 2011-2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -22,6 +22,7 @@
 /*
  * tty/tty.cmm : 端末サーバの本体、キーボード入力の受付とディスプレイ表示をする
  *
+ * 2017.01.24 : 入出力方法をシリアル通信方式に変更、システムコール名を変更（getPS2 -> getKey）
  * 2016.10.28 : キーボード入力されているコード（されていない場合は'\0'）を返す関数を追加
  * 2016.01.03 : 中身を sysConRead() に移動し getBuf() を廃止(重村)
  * 2015.09.08 : strcpy() は util.cmm のものを使うように変更(重村)
@@ -39,8 +40,7 @@
 #include <kernel.h>
 #include <syscall.h>
 #include "tty.h"
-#include "kbd.h"
-#include "scConv.h"
+#include "kbdDisp.h"
 
 // -------------------------- conRead システムコール --------------------------
 
@@ -49,19 +49,17 @@ int sysConRead(char[] buf, int len) {
   int kbdCnt = 0;                                       // buf のインデクス
   len = len - 1;                                        // '\0' の格納領域を確保
   for (;;) {
-    char c = scConv(getKeyCode());                      // 1文字入力
+    char c = getKeyCode();                              // 1文字入力
     if (kbdCnt>=len || c=='\r' || c=='\n') {            // 指定長以上か改行なら
       buf[kbdCnt] = '\0';
-      putCh('\n');
+      putTty('\n');
       break;
     } else if (0x20<=ord(c) && ord(c)<=0x7e && kbdCnt<len) { // 表示可能な文字
       buf[kbdCnt] = c;
-      putCh(c);
+      putTty(c);
       kbdCnt = kbdCnt + 1;
-    } else if (c=='\x08' && kbdCnt>0) {                 // バックスペースなら
-      putCh('\x08');                                    //   カーソル位置を左に
-      putCh(' ');                                       //   空白を出力
-      putCh('\x08');                                    //   カーソル位置を左に
+    } else if ( (c=='\x08' || c=='\x7f') && kbdCnt>0) {  // バックスペースなら
+      putStrTty("\x08 \x08");                            //   カーソル位置を左に
       kbdCnt = kbdCnt - 1;
     }
   }
@@ -73,15 +71,15 @@ int sysConRead(char[] buf, int len) {
 // conWrite システムコールの本体 (文字列をディスプレイに表示する)
 //   buf はユーザ領域でフォーマット解読済みの文字列となっている
 int sysConWrite(void[] buf) {
-  putStr(buf);                                          // 文字列を表示する
+  putStrTty(buf);                                        // 文字列を表示する
   return 0;
 }
 
-// -------------------------- getPS2 システムコール --------------------------
+// -------------------------- getKey システムコール --------------------------
 
-// getPS2 システムコールの本体 (キーボードが押されていればその文字コードを返す，そうでなければ'\0'を返す)
-int sysGetPS2() {
-  return ord(scConv(noBlockGetKey()));
+// getKey システムコールの本体 (キーボードが押されていればその文字コードを返す，そうでなければ'\0'を返す)
+int sysGetKey() {
+  return ord(getTty());
 }
 
 // ----------------------------- 要求待ち受け部 -------------------------------
@@ -92,15 +90,15 @@ int ttySysCall(int op, int prm1, int prm2) {
     op = sysConRead(_ItoA(prm1), prm2);                 // conRead(buf, len)
   } else if (op==CONWRITE) {
     op = sysConWrite(_ItoA(prm1));                      // conWrite(buf)
-  } else if (op==GETPS2) {
-    op = sysGetPS2();                                   // getPS2
+  } else if (op==GETKEY) {
+    op = sysGetKey();                                   // getKey
   } else  op= -1;                                       // エラー
   return op;
 }
 
 // クライアントとランデブする
 public void ttyMain() {
-  keyBoardInit();                                       // ドライバ初期化
+  ttyInit();                                            // ドライバ初期化
   ttyLink = newLink();                                  // リンクを生成する
   while (true) {                                        // システムコールを待つ
     Link l = receive(ttyLink);                          // システムコールを受信
@@ -125,9 +123,9 @@ public int conWrite(void[] buf) {
   return r;
 }
 
-// getPS2 システムコール
-public int getPS2(){
-  int r = sndrec(ttyLink, GETPS2, 0, 0, 0);
+// getKey システムコール
+public int getKey(){
+  int r = sndrec(ttyLink, GETKEY, 0, 0, 0);
   return r;
 }
 

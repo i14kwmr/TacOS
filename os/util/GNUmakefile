@@ -2,7 +2,7 @@
 # TacOS Source Code
 #    Tokuyama kousen Educational Computer 16 bit Version
 #
-# Copyright (C) 2016 by
+# Copyright (C) 2016 - 2017 by
 #                      Dept. of Computer Science and Electronic Engineering,
 #                      Tokuyama College of Technology, JAPAN
 #
@@ -19,13 +19,13 @@
 #
 # util/Makefile : 便利ルーチンの Makefile
 #
+# 2017.01.25    : VRAM領域を消去
 # 2016.01.08    : 著作権表示等を整理
 #
 # $Id$
 #
 
-OBJS=crt0.o console.o util.o
-CPFLAGS+=-DVRAM=0xe000
+OBJS=crt0.o util.o
 #CPFLAGS+=-DSIO
 
 include ../Makefile.rul

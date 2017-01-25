@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer
  *
- * Copyright (C) 2008-2016 by
+ * Copyright (C) 2008-2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -21,7 +21,7 @@
 
 /*
  * util/util.h : util.cmm の外部インターフェイス
- *
+ * 2017.01.25 : リングバッファのサイズを変更（256 -> 80）
  * 2016.12.24 : リングバッファ関連の関数等を追加
  * 2016.01.19 : WordLE を wordLE に変更
  * 2016.01.18 : WordBE と stWordBE を削除
@@ -75,7 +75,7 @@ struct RingBuf {
 };
 
 
-#define  BSIZE   256
+#define  BSIZE   80
 // リングバッファは空か
 #define ISEmpty(buf) ((buf).head==(buf).tail)
 // リングバッファは満か

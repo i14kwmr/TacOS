@@ -2,7 +2,7 @@
 ; TacOS Source Code
 ;    Tokuyama kousen Advanced educational Computer
 ;
-; Copyright (C) 2009-2016 by
+; Copyright (C) 2009-2017 by
 ;                      Dept. of Computer Science and Electronic Engineering,
 ;                      Tokuyama College of Technology, JAPAN
 ;
@@ -20,6 +20,7 @@
 ; 
 ; util/crt0.s : カーネル用スタートアップ
 ;
+; 2017.01.25 : VRAM領域の消去により、ユーザ使用可能領域を拡張
 ; 2016.01.20 : __fp() を追加
 ; 2016.01.06 : コメントの体裁を清書 
 ; 2015.09.02 : __AtoA 追加(重村)
@@ -38,7 +39,7 @@
 ; [sp+2]が第1引数、[sp+4]が第2引数
 
 .start                      ; IPL からここにジャンプしてくる
-        ld      sp,#0xe000  ; SP をメモリの最後に
+        ld      sp,#0xf000  ; SP をメモリの最後に
         call    _main       ; カーネルのメインに飛ぶ
         halt                ; 万一カーネルが終了したらここで終わる
         jmp     0xf000      ; IPL へジャンプ

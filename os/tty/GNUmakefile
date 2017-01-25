@@ -2,7 +2,7 @@
 # TacOS Source Code
 #    Tokuyama kousen Educational Computer 16 bit Version
 #
-# Copyright (C) 2011 - 2016 by
+# Copyright (C) 2011 - 2017 by
 #                      Dept. of Computer Science and Electronic Engineering,
 #                      Tokuyama College of Technology, JAPAN
 #
@@ -19,11 +19,12 @@
 #
 # tty/Makefile : tty の Makefile
 #
+# 2017.01.24         : kdd.cmm -> kbdDisp に変更
 # 2015.06.04         : 村田開発開始、kbdProc と vgaWin を合成して tty フォルダに改称
 # 2011.05.16         : 初期バージョン
 #
 # $Id$
 #
-OBJS=tty.o kbd.o scConv.o
+OBJS=tty.o kbdDisp.o
 
 include ../Makefile.rul

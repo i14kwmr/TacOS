@@ -98,7 +98,7 @@ public int main(int argc, char[][] argv){
   tecSet();
   conWrite("\nProgram Writing...");
   twrite();
-  conWrite("\nConsole:TeC\n");
+  conWrite("\nConsole:TeC\r\n");
   out(0x2c,0x0004);                    // コンソールパネルのモードをTeCにし，
                                        // 入力はコンソールパネルから行えるようにする．
   return 0;

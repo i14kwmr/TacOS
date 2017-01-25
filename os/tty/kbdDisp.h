@@ -2,7 +2,7 @@
  * TacOS Source Code
  *    Tokuyama kousen Advanced educational Computer.
  *
- * Copyright (C) 2011-2016 by
+ * Copyright (C) 2017 by
  *                      Dept. of Computer Science and Electronic Engineering,
  *                      Tokuyama College of Technology, JAPAN
  *
@@ -20,14 +20,15 @@
  */
 
 /*
- * tty/scConv.h : scConv.cmm の外部インタフェース
+ * tty/kbdDisp.h : kbdDisp.cmm の外部インタフェース
  *
- * 2015.06.04 : 村田開発開始、include を変更
- * 2012.05.15 : TeC7 用に I/O アドレスなど変更
- * 2011.05.20 : 新規作成(TaC)
  *
  * $Id$
  *
  */
 
-public char scConv(char c);
+public void ttyInit();              // 初期化
+public void putTty(char c);         // 1文字出力
+public void putStrTty(char[] buf);  // 文字列出力
+public char getKeyCode();           // キーコード取得（待ちあり）
+public char getTty();               // キーコード取得（待ちなし）

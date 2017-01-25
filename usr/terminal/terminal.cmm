@@ -45,7 +45,7 @@ public int main(int argc, char[][] argv){
       c[0] = chr(ch);
       conWrite(c);
     }else{
-      int k = getPS2();
+      int k = getKey();
       if(k == 0x1b){ // Escキー
         conWrite("\n");
         out(0x2c,0x0004);
